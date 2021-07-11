@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>redesigned-waffle</title>
+
+    <style>
+        :root {
+            font-size: 20px;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+
+            color: #dfe2e9;
+
+            background: #16161D;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="js/core/util.js"></script>
+    <script src="js/core/drag.js"></script>
+    <script src="js/components/table.js"></script>
+    <script>
+        'use strict'
+        const _DEBUG = 1
+
+        const table = new Table()
+            .addColumn("A", "right")
+            .addColumn("B", "center")
+            .addColumn("C")
+            .addColumn("D")
+            .addRow("1A", "1B", "1C", "1D")
+            .addRow("2A", "2B", "2C", "2D")
+    </script>
+</body>
+
+</html>
