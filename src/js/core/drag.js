@@ -34,14 +34,14 @@ class Draggable {
      * @param {string} event
      * @returns {boolean} "true" if error, "false" otherwise.
      */
-    executeHooks(event) {
+    executeHooks(event, data) {
         let error = false
 
         // TODO: Should we early exit if error?
         if (this.hooks.hasOwnProperty(event) && this.hooks[event].length)
             for (let hook of this.hooks[event])
                 if (typeof (hook) === "function")
-                    error |= hook(event)
+                    error |= hook(data)
 
         return error
     }
@@ -55,7 +55,7 @@ class Draggable {
     dragHandler = e => {
         e.preventDefault()
 
-        if (this.executeHooks("mousemove"))
+        if (this.executeHooks("mousemove", e))
             return
 
         const [cx, cy] = this.getCoordinates(e)
@@ -113,7 +113,7 @@ class Draggable {
         if (this.parent.hasAttribute("data-dragged"))
             return
 
-        if (this.executeHooks("mousedown"))
+        if (this.executeHooks("mousedown", e))
             return
 
         this.previousPosition = this.getCoordinates(e)
@@ -124,11 +124,11 @@ class Draggable {
         document.addEventListener("touchmove", this.dragHandler)
     }
 
-    stopHandler = _ => {
+    stopHandler = e => {
         if (!this.parent.hasAttribute("data-dragged"))
             return
 
-        this.executeHooks("mouseup")
+        this.executeHooks("mouseup", e)
 
         this.parent.removeAttribute("data-dragged")
 
