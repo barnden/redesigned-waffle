@@ -1,14 +1,20 @@
-const Utils = {
-    getLineHeight: parent => {
+class Utils {
+    static getElementHeight(parent, attributes, styles) {
         if (!(parent instanceof HTMLElement))
-            throw "[util.js] getLineHeight() expected parent of type 'HTMLElement'."
+            throw "[Utils] getLineHeight() expected parent of type 'HTMLElement'."
 
         const element = document.createElement("div")
 
-        element.style.margin = "0"
-        element.style.padding = "0"
-
         element.innerHTML = "M"
+        element.style.margin = element.style.padding = "0"
+
+        if (typeof (styles) !== "undefined")
+            this.setElementStyle(element, styles)
+
+        if (typeof (attributes) !== "undefined")
+            Object.entries(attributes).forEach(
+                ([k, v]) => element.setAttribute(k, v)
+            )
 
         parent.appendChild(element)
 
@@ -17,8 +23,15 @@ const Utils = {
         parent.removeChild(element)
 
         return height
-    },
-    setElementStyle: (element, styles) => Object.entries(styles).forEach(
-        ([k, v]) => element.style[k] = v
-    )
+    }
+
+    static setElementStyle(element, styles) {
+        this.setObjectPair(element.style, styles)
+    }
+
+    static setObjectPair(object, pairs) {
+        Object.entries(pairs).forEach(
+            ([k, v]) => object[k] = v
+        )
+    }
 }
