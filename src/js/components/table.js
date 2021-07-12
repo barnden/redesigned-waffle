@@ -90,10 +90,10 @@ class TableRow {
         this.drag = new Draggable(this.element, undefined, this.parent.element)
 
         this.drag.addHook("mouseup", _ => {
-            const top = parseInt(this.element.style.top) || 0
             const rowHeight = this.parent.properties.rowHeight
+            const top = (parseInt(this.element.style.top) || 0) + rowHeight / 2
 
-            this.rank = ~~((top + 1) / rowHeight)
+            this.rank = ~~((top + 1) / rowHeight) || 1
             this.element.style.top = this.rank * rowHeight + "px"
             this.element.style.left = null
 
@@ -137,11 +137,11 @@ class Table {
         })
 
         if (this.properties.rowHeight == 0)
-            this.properties.rowHeight = Utils.getLineHeight(this.parent)
+            this.properties.rowHeight = Utils.getElementHeight(this.parent)
 
         this.parent.appendChild(this.element)
 
-        if (_DEBUG >= 1)
+        if (_DEBUG)
             console.debug(`[Table] Computed line height is ${this.properties.rowHeight}px.`)
     }
 
@@ -175,14 +175,14 @@ class Table {
 
         this.height += this.properties.rowHeight
 
-        Array.from(arguments).forEach((arg, i) => {
-            let align = "left"
+        const getAlignment = i => header != null ? header.columns[i].align : "left"
 
-            if (header != null)
-                align = header.columns[i].align
+        Array.from(arguments).forEach(
+            (arg, i) => row.addColumn(arg, getAlignment(i))
+        )
 
-            row.addColumn(arg, align)
-        })
+        for (let i = row.columns.length; i < header.columns.length; i++)
+            row.addColumn("", getAlignment(i))
 
         return this
     }
