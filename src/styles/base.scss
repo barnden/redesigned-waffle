@@ -1,0 +1,45 @@
+@import "core";
+
+:root {
+    font-size: 20px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+
+    height: 100%;
+    width: 100%;
+
+    color: $default-color;
+    background: $default-background;
+
+    font-family: $mono;
+}
+
+.table {
+    border: 1px solid $border-1;
+
+    > .row {
+        padding: 0.5em 0;
+        background: $default-background;
+
+        &.header {
+            background: lighten($default-background, 3%);
+
+            font-weight: bold;
+        }
+
+        &:hover {
+            background: $border-0;
+        }
+
+        &:not(:last-child) {
+            border-bottom: 1px solid $border-1;
+        }
+    }
+}

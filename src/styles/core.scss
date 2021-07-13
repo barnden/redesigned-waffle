@@ -1,0 +1,107 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Lora/static/Lora-Regular.ttf) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Lora';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Lora/static/Lora-Italic.ttf) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Lora';
+    font-style: normal;
+    font-weight: bold;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Lora/static/Lora-SemiBold.ttf) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Lora';
+    font-style: italic;
+    font-weight: bold;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Lora/static/Lora-SemiBoldItalic.ttf) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Fantasque Sans Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Fantasque/FantasqueSansMono-Regular.woff2) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Fantasque Sans Mono';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Fantasque/FantasqueSansMono-Italic.woff2) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Fantasque Sans Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Fantasque/FantasqueSansMono-Bold.woff2) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Fantasque Sans Mono';
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: url(https://static.barnden.dev/fonts/Fantasque/FantasqueSansMono-BoldItalic.woff2) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+$serif: "Lora", "Roboto Slab", "Times New Roman", serif;
+$mono: "Fantasque Sans Mono", "Consolas", "Inconsolata", "Roboto Mono", monospace;
+
+$default-size: 18px;
+$line-height: 1.65;
+
+$spacing: 2em;
+
+$orange: #d77a61;
+$green: #648381;
+$beige: #75715E;
+$red: #A64253;
+$eigengrau: #16161D;
+
+$default-color: #dfe2e9;
+$default-background: $eigengrau;
+
+$link-color: #85BDBF;
+$link-hover: lighten($link-color, 15%);
+
+$border-0: lighten($default-background, 6.375%);
+$border-1: lighten($default-background, 15%);
+$border-2: lighten($default-background, 23.625%);
+$border-3: lighten($default-background, 32.25%);
+
+:root { font-size: $default-size }
+
+@mixin media-query($device) {
+    @media screen and (max-width: $device) {
+        @content;
+    }
+}
