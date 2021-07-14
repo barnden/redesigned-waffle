@@ -130,8 +130,16 @@ class TableCell {
         return parseInt(this.element.style.flexGrow) || 0
     }
 
+    get boundingBox() {
+        return this.element.getBoundingClientRect()
+    }
+
     get width() {
-        return ~~this.element.getBoundingClientRect().width
+        return ~~this.boundingBox.width
+    }
+
+    get height() {
+        return ~~this.boundingBox.height
     }
 }
 
@@ -143,6 +151,7 @@ class TableRow {
         this.parent = parent
         this.drag = draggable
         this.columns = []
+        this.height = 0
 
         this.setup(rank)
     }
@@ -151,11 +160,7 @@ class TableRow {
         this.element = document.createElement("div")
         this.rank = rank
 
-        Utils.setStyle(this.element, {
-            height: this.parent.properties.rowHeight + "px",
-            top: this.parent.properties.rowHeight * this.rank + "px"
-        })
-
+        this.element.style.top = this.parent.getOffset(this.rank) + "px"
         this.element.classList.add("row")
 
         this.parent.element.appendChild(this.element)
@@ -166,7 +171,6 @@ class TableRow {
 
     setupDrag() {
         const drag = new Draggable(this.element, undefined, this.parent.element)
-
         const rowHeight = this.parent.properties.rowHeight
 
         drag.addHook("dragstart", _ => {
@@ -187,7 +191,7 @@ class TableRow {
 
             Utils.setStyle(this.element, {
                 left: null,
-                top: this.rank * rowHeight + "px",
+                top: this.parent.getOffset(this.rank) + "px",
                 transition: "top 100ms",
                 zIndex: 0
             })
@@ -217,10 +221,7 @@ class TableRow {
         column.index = this.columns.length
         column.content = content
 
-        const header = this.parent.properties.header
-
-        // if (header != null && typeof (this.header) === "undefined")
-        //     column.element.style.maxWidth = header.columns[column.index].element.getBoundingClientRect().width + "px"
+        this.height = Math.max(this.height, column.height)
 
         this.columns.push(column)
 
@@ -245,7 +246,7 @@ class TableRow {
 }
 
 class Table {
-    constructor(parent, rowHeight = 0) {
+    constructor(parent) {
         if (!(parent instanceof HTMLElement))
             parent = document.body
 
@@ -253,14 +254,31 @@ class Table {
         this.properties = {
             header: null,
             rows: [],
-            rowHeight: rowHeight
+            rowHeight: 0,
+            get headerHeight() { return this.header.height }
         }
 
         this.setup()
     }
 
     getRank(top) {
-        return ~~(top / this.properties.rowHeight) || this.properties.header != null
+        top /= this.properties.rowHeight
+
+        if (!this.properties.header)
+            return ~~top
+
+        top -= this.properties.headerHeight / this.properties.rowHeight
+
+        return Math.max(~~top + 1, 1)
+    }
+
+    getOffset(rank) {
+        const offset = rank * this.properties.rowHeight
+
+        if (!this.properties.header)
+            return offset
+
+        return offset - this.properties.rowHeight + this.properties.headerHeight
     }
 
     setup() {
@@ -285,13 +303,16 @@ class Table {
 
         if (header == null) {
             this.properties.header = header = new TableRow(this, false)
-            this.height += this.properties.rowHeight
-            header.header = true
 
-            this.properties.header.element.classList.add("header")
+            header.element.classList.add("header")
+            header.header = true
         }
 
+        const prevHeight = header.height
         header.addColumn(title, editable, align, flexGrow)
+
+        if (prevHeight != header.height)
+            this.height += header.height - prevHeight
 
         return this
     }
@@ -332,12 +353,12 @@ class Table {
      * @param {number} rank 
      */
     shift(rank) {
-        const rows = [...this.properties.rows].sort(
+        this.properties.rows.sort(
             (a, b) => a.rank > b.rank
         )
         let i = this.properties.header != null
 
-        rows.forEach(v => {
+        this.properties.rows.forEach(v => {
             if (v.element.getAttribute("data-dragged") != null)
                 return
 
@@ -345,7 +366,7 @@ class Table {
                 v.rank++
 
             Utils.setStyle(v.element, {
-                top: v.rank * this.properties.rowHeight + "px",
+                top: this.getOffset(v.rank) + "px",
                 transition: "top 100ms"
             })
         })

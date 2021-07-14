@@ -59,9 +59,12 @@ body, html {
         border-top: 1px solid $border-1;
 
         &.header {
-            background: lighten($default-background, 3%);
-
             font-weight: bold;
+
+            > div {
+                white-space: normal;
+                background: lighten($default-background, 3%)
+            }
         }
 
         &:hover, &:hover > div, &:hover > div.ellipsis::after {
