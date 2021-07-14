@@ -191,9 +191,9 @@ class TableRow {
 
             Utils.setStyle(this.element, {
                 left: null,
+                zIndex: null,
                 top: this.parent.getOffset(this.rank) + "px",
-                transition: "top 100ms",
-                zIndex: 0
+                transition: "top 100ms"
             })
 
             return false
@@ -206,8 +206,8 @@ class TableRow {
             if (this.rank == currentRank)
                 return false
 
-            this.rank = currentRank
             this.parent.shift(currentRank)
+            this.rank = currentRank
 
             return false
         })
@@ -282,17 +282,20 @@ class Table {
     }
 
     setup() {
-        this.element = document.createElement("div")
+        const element = document.createElement("div")
+        element.classList.add("table")
 
-        this.element.classList.add("table")
+        this.element = element
+        this.clone = element.cloneNode()
 
-        this.parent.appendChild(this.element)
+        this.parent.appendChild(this.clone)
 
-        if (this.properties.rowHeight == 0)
-            this.properties.rowHeight = Utils.getElementHeight(this.element, {
-                class: "row",
-                innerHTML: "<div>M</div>"
-            })
+        this.properties.rowHeight = Utils.getElementHeight(this.clone, {
+            class: "row",
+            innerHTML: "<div class=\"row\"><div>M<div></div>"
+        })
+
+        this.clone.innerHTML = ""
 
         if (_DEBUG)
             console.debug(`[Table] Computed line height is ${this.properties.rowHeight}px.`)
@@ -300,6 +303,7 @@ class Table {
 
     addColumn(title, editable, align, flexGrow) {
         let header = this.properties.header
+        this.element = [this.clone, this.clone = this.element][0]
 
         if (header == null) {
             this.properties.header = header = new TableRow(this, false)
@@ -313,6 +317,8 @@ class Table {
 
         if (prevHeight != header.height)
             this.height += header.height - prevHeight
+
+        this.element = [this.clone, this.clone = this.element][0]
 
         return this
     }
@@ -356,24 +362,24 @@ class Table {
         this.properties.rows.sort(
             (a, b) => a.rank > b.rank
         )
-        let i = this.properties.header != null
+            let i = this.properties.header != null
 
-        this.properties.rows.forEach(v => {
-            if (v.element.getAttribute("data-dragged") != null)
-                return
+            this.properties.rows.forEach(v => {
+                if (v.element.getAttribute("data-dragged") != null)
+                    return
 
-            if ((v.rank = i++) >= rank)
-                v.rank++
+                if ((v.rank = i++) >= rank)
+                    v.rank++
 
-            Utils.setStyle(v.element, {
-                top: this.getOffset(v.rank) + "px",
-                transition: "top 100ms"
+                Utils.setStyle(v.element, {
+                    top: this.getOffset(v.rank) + "px",
+                    transition: "top 100ms"
+                })
             })
-        })
     }
 
     get height() {
-        return this.element.getBoundingClientRect().height
+        return parseInt(this.element.style.height) || 0
     }
 
     set height(height) {
