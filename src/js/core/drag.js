@@ -13,9 +13,10 @@ class Draggable {
         this.container = container
 
         this.hooks = {
-            mouseup: [],
-            mousemove: [],
-            mousedown: []
+            dragend: [],
+            dragpremove: [],
+            dragpostmove: [],
+            dragstart: []
         }
 
         this.setup()
@@ -55,10 +56,15 @@ class Draggable {
     dragHandler = e => {
         e.preventDefault()
 
-        if (this.executeHooks("mousemove", e))
+        if (this.executeHooks("dragpremove", e))
             return
 
-        const [cx, cy] = this.getCoordinates(e)
+        const currentPosition = this.getCoordinates(e)
+
+        if (this.previousPosition == currentPosition)
+            return
+
+        const [cx, cy] = currentPosition
 
         const x = this.parent.offsetLeft - this.previousPosition[0] + cx
         const y = this.parent.offsetTop - this.previousPosition[1] + cy
@@ -100,11 +106,12 @@ class Draggable {
 
         this.parent.style.left = `${left}px`
         this.parent.style.top = `${top}px`
+
+        if (this.executeHooks("dragpostmove", [e, left, top]))
+            return
     }
 
     startHandler = e => {
-        e.preventDefault()
-
         // Only activate draggable on left mouse
         if (e.type != "touchstart" && e.buttons != 1)
             return
@@ -113,7 +120,7 @@ class Draggable {
         if (this.parent.hasAttribute("data-dragged"))
             return
 
-        if (this.executeHooks("mousedown", e))
+        if (this.executeHooks("dragstart", e))
             return
 
         this.previousPosition = this.getCoordinates(e)
@@ -128,7 +135,7 @@ class Draggable {
         if (!this.parent.hasAttribute("data-dragged"))
             return
 
-        this.executeHooks("mouseup", e)
+        this.executeHooks("dragend", e)
 
         this.parent.removeAttribute("data-dragged")
 
@@ -162,9 +169,10 @@ class Draggable {
     remove(hooks = true) {
         if (hooks)
             this.hooks = {
-                mouseup: [],
-                mousemove: [],
-                mousedown: []
+                dragend: [],
+                dragpremove: [],
+                dragpostmove: [],
+                dragstart: []
             }
 
         this.draggable.removeEventListener("mousedown", this.startHandler)
