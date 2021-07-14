@@ -6,14 +6,18 @@ class Utils {
         const element = document.createElement("div")
 
         element.innerHTML = "M"
-        element.style.margin = element.style.padding = "0"
 
         if (typeof (styles) !== "undefined")
-            this.setElementStyle(element, styles)
+            this.setStyle(element, styles)
 
         if (typeof (attributes) !== "undefined")
             Object.entries(attributes).forEach(
-                ([k, v]) => element.setAttribute(k, v)
+                ([k, v]) => {
+                    if (k == "innerHTML")
+                        return (element.innerHTML = v)
+
+                    element.setAttribute(k, v)
+                }
             )
 
         parent.appendChild(element)
@@ -25,8 +29,14 @@ class Utils {
         return height
     }
 
-    static setElementStyle(element, styles) {
+    static setStyle(element, styles) {
         this.setObjectPair(element.style, styles)
+    }
+
+    static setStyles() {
+        Array.from(arguments).forEach(
+            param => this.setStyle(param[0], param[1])
+        )
     }
 
     static setObjectPair(object, pairs) {
