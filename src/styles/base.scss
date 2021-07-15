@@ -42,6 +42,7 @@ body, html {
     position: relative;
 
     width: 100%;
+    max-width: 100%;
 
     border: 1px solid $border-1;
     border-top: none;
@@ -58,13 +59,11 @@ body, html {
 
         border-top: 1px solid $border-1;
 
-        &.header {
+        &.header > div {
             font-weight: bold;
+            white-space: normal;
 
-            > div {
-                white-space: normal;
-                background: lighten($default-background, 3%)
-            }
+            background: lighten($default-background, 3%)
         }
 
         &:hover, &:hover > div, &:hover > div.ellipsis::after {
@@ -72,20 +71,13 @@ body, html {
         }
 
         > div {
-            position: relative;
             background: $default-background;
 
             padding: 0.25rem;
 
+            text-overflow: ellipsis;
             white-space: nowrap;
-
-            &.ellipsis::after {
-                position: absolute;
-
-                right: 0; bottom: 0.25;
-                background: $default-background;
-                content: "...";
-            }
+            overflow: hidden;
 
             > input[type="text"] {
                 font-family: $mono;

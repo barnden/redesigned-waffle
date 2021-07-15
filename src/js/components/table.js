@@ -1,19 +1,19 @@
 class TableCell {
-    constructor(parent, editable = false, align = "left", flexGrow = 1) {
+    constructor(parent, editable = false, align = "left", basis = "100%") {
         if (!(parent instanceof TableRow))
             throw "[TableCell] Expected parent of type 'TableRow'."
 
         this.parent = parent
         this.editable = editable
-        this.setup(align, flexGrow)
+        this.setup(align, basis)
     }
 
-    setup(align, grow) {
+    setup(align, basis) {
         this.element = document.createElement("div")
 
         Utils.setStyle(this.element, {
-            flexShrink: "0",
-            flexBasis: "0"
+            flexShrink: 0,
+            flexGrow: 0
         })
 
         if (this.editable)
@@ -22,7 +22,7 @@ class TableCell {
         this.parent.element.appendChild(this.element)
 
         this.align = align
-        this.grow = grow
+        this.basis = basis
     }
 
     setupEditable() {
@@ -33,9 +33,10 @@ class TableCell {
             if (typeof (this.editor) === "undefined")
                 return
 
-            this.content = this.editor.value
+            const content = this.editor.value
             this.editor.remove()
             this.editor = undefined
+            this.content = content
         }
 
         this.element.addEventListener("dblclick", _ => {
@@ -49,7 +50,7 @@ class TableCell {
 
             this.editor.addEventListener("focusout", remove)
             this.editor.addEventListener("keydown", e => {
-                if (e.key === "Enter")
+                if (["Enter", "Escape"].includes(e.key))
                     remove()
             })
 
@@ -64,29 +65,6 @@ class TableCell {
 
         this.element.innerHTML = DOMPurify.sanitize(data)
         this._data = data
-
-        const row = this.parent
-        const header = row.parent.properties.header
-
-        if (row.header || row.columns.length != header.columns.length)
-            return
-
-        const maxWidth = ~~header.columns[this.index].element.getBoundingClientRect().width
-
-        if (this.width > maxWidth) {
-            this.element.classList.add("ellipsis")
-
-            if (_DEBUG)
-                console.log(
-                    `element exceeded bounds:\n\t`,
-                    `column: ${this.index}, content: ${this.content}\n\t`,
-                    `width: ${this.width} px, maxWidth: ${maxWidth} px`
-                )
-
-            this.element.style.maxWidth = maxWidth + "px"
-        } else {
-            this.element.classList.remove("ellipsis")
-        }
     }
 
     get content() {
@@ -116,18 +94,18 @@ class TableCell {
         return this.element.style.textAlign || "left"
     }
 
-    set grow(flexGrow) {
+    set basis(n) {
         if (!(this.element instanceof HTMLElement))
-            throw "[TableCell] Attempted to set grow before setup()."
+            throw "[TableCell] Attempted to set basis before setup()."
 
-        this.element.style.flexGrow = flexGrow
+        this.element.style.flexBasis = this.element.style.maxWidth = n + "%"
     }
 
-    get grow() {
+    get basis() {
         if (!(this.element instanceof HTMLElement))
-            throw "[TableCell] Attempted to get grow before setup()."
+            throw "[TableCell] Attempted to get basis before setup()."
 
-        return parseInt(this.element.style.flexGrow) || 0
+        return parseFloat(this.element.style.flexBasis) || 0
     }
 
     get boundingBox() {
@@ -135,10 +113,16 @@ class TableCell {
     }
 
     get width() {
+        if (!(this.element instanceof HTMLElement))
+            throw "[TableCell] Attempted to get width before setup()."
+
         return ~~this.boundingBox.width
     }
 
     get height() {
+        if (!(this.element instanceof HTMLElement))
+            throw "[TableCell] Attempted to get height before setup()."
+
         return ~~this.boundingBox.height
     }
 }
@@ -151,7 +135,6 @@ class TableRow {
         this.parent = parent
         this.drag = draggable
         this.columns = []
-        this.height = 0
 
         this.setup(rank)
     }
@@ -160,7 +143,6 @@ class TableRow {
         this.element = document.createElement("div")
         this.rank = rank
 
-        this.element.style.top = this.parent.getOffset(this.rank) + "px"
         this.element.classList.add("row")
 
         this.parent.element.appendChild(this.element)
@@ -171,9 +153,26 @@ class TableRow {
 
     setupDrag() {
         const drag = new Draggable(this.element, undefined, this.parent.element)
-        const rowHeight = this.parent.properties.rowHeight
 
-        drag.addHook("dragstart", _ => {
+        drag.addHook("dragstart", this.dragstart.bind(this))
+        drag.addHook("dragpostmove", this.postmove.bind(this))
+        drag.addHook("dragend", this.dragend.bind(this))
+
+        this.drag = drag
+    }
+
+    addColumn(content, editable, align, basis) {
+        const column = new TableCell(this, editable, align, basis)
+
+        column.index = this.columns.length
+        column.content = content
+
+        this.columns.push(column)
+
+        return column
+    }
+
+    dragstart() {
         Utils.setStyles(
             [this.element, {
                 transition: null,
@@ -181,51 +180,35 @@ class TableRow {
             }],
             [this.parent.element, { userSelect: "none" }]
         )
-        })
+    }
 
-        drag.addHook("dragend", _ => {
-            const currentRank = this.parent.getRank(this.y + rowHeight / 2)
-
-            if (this.rank != currentRank)
-                this.rank = currentRank
-
-            Utils.setStyle(this.element, {
-                left: null,
-                zIndex: null,
-                top: this.parent.getOffset(this.rank) + "px",
-                transition: "top 100ms"
-            })
-
-            return false
-        })
-
-        drag.addHook("dragpostmove", data => {
-            const top = data[2] + rowHeight / 2
+    postmove(data) {
+        const top = data[2] + this.parent.properties.rowHeight / 2
         const currentRank = this.parent.getRank(top)
 
         if (this.rank == currentRank)
             return false
 
-            this.parent.shift(currentRank)
+        this.parent.shift(this.rank, currentRank)
         this.rank = currentRank
 
         return false
-        })
-
-        this.drag = drag
     }
 
-    addColumn(content, editable, align = "left", flexGrow) {
-        const column = new TableCell(this, editable, align, flexGrow)
+    dragend() {
+        const currentRank = this.parent.getRank(this.y + this.parent.properties.rowHeight / 2)
 
-        column.index = this.columns.length
-        column.content = content
+        if (this.rank != currentRank)
+            this.rank = currentRank
 
-        this.height = Math.max(this.height, column.height)
+        Utils.setStyle(this.element, {
+            left: null,
+            zIndex: null,
+            top: this.parent.getOffset(this.rank),
+            transition: "top 100ms"
+        })
 
-        this.columns.push(column)
-
-        return column
+        return false
     }
 
     get y() {
@@ -242,6 +225,42 @@ class TableRow {
 
     set rank(n) {
         this.element.setAttribute("data-rank", n)
+    }
+}
+
+class TableHeader extends TableRow {
+    constructor(parent, draggable = true, rank = 0) {
+        super(parent, draggable, rank)
+
+        this.header = true
+        this.height = 0
+        this.totalWeight = 0
+    }
+
+    setup(rank) {
+        super.setup(rank)
+
+        this.element.classList.add("header")
+    }
+
+    addColumn(content, editable, align, columnWeight) {
+        this.totalWeight += columnWeight
+
+        const column = super.addColumn(content, editable, align, 0)
+
+        column.weight = columnWeight
+
+        for (let col of this.columns)
+            col.basis = 100 * (col.weight / this.totalWeight)
+
+        return column
+    }
+
+    computeHeight() {
+        this.height = 0
+
+        for (let col of this.columns)
+            this.height = Math.max(this.height, col.height)
     }
 }
 
@@ -273,12 +292,14 @@ class Table {
     }
 
     getOffset(rank) {
-        const offset = rank * this.properties.rowHeight
+        let offset = rank * this.properties.rowHeight
 
         if (!this.properties.header)
             return offset
 
-        return offset - this.properties.rowHeight + this.properties.headerHeight
+        offset += this.properties.headerHeight - this.properties.rowHeight
+
+        return offset + "px"
     }
 
     setup() {
@@ -299,26 +320,26 @@ class Table {
 
         if (_DEBUG)
             console.debug(`[Table] Computed line height is ${this.properties.rowHeight}px.`)
+
+        this.resizeObserver = new ResizeObserver(_ => this.reposition())
+        this.resizeObserver.observe(this.element)
     }
 
-    addColumn(title, editable, align, flexGrow) {
+    addColumn(title, editable, align, columnWeight = 1) {
         let header = this.properties.header
-        this.element = [this.clone, this.clone = this.element][0]
 
-        if (header == null) {
-            this.properties.header = header = new TableRow(this, false)
+        this.swap()
 
-            header.element.classList.add("header")
-            header.header = true
-        }
+        if (header == null)
+            this.properties.header = header = new TableHeader(this, false)
 
         const prevHeight = header.height
-        header.addColumn(title, editable, align, flexGrow)
+        header.addColumn(title, editable, align, columnWeight)
 
-        if (prevHeight != header.height)
+        if (prevHeight < header.height)
             this.height += header.height - prevHeight
 
-        this.element = [this.clone, this.clone = this.element][0]
+        this.swap()
 
         return this
     }
@@ -340,7 +361,7 @@ class Table {
             return [
                 column.editable,
                 column.align,
-                column.grow
+                column.basis
             ]
         }
 
@@ -358,24 +379,49 @@ class Table {
      * Shifts all rows such that there is a gap between rows at rank.
      * @param {number} rank 
      */
-    shift(rank) {
-        this.properties.rows.sort(
+    shift(initialRank, currentRank) {
+        const start = Math.max(Math.min(initialRank, currentRank) - 1, 0)
+        const end = Math.max(initialRank, currentRank)
+        const shiftDown = initialRank > currentRank
+        const rows = this.properties.rows
+
+        rows.sort(
             (a, b) => a.rank > b.rank
         )
-            let i = this.properties.header != null
 
-            this.properties.rows.forEach(v => {
-                if (v.element.getAttribute("data-dragged") != null)
-                    return
+        for (let i = start; i < end; i++) {
+            const row = rows[i]
 
-                if ((v.rank = i++) >= rank)
-                    v.rank++
+            if (row.element.getAttribute("data-dragged") != null)
+                continue
 
-                Utils.setStyle(v.element, {
-                    top: this.getOffset(v.rank) + "px",
+            row.rank += shiftDown ? 1 : -1
+
+            Utils.setStyle(row.element, {
+                top: this.getOffset(row.rank),
                 transition: "top 100ms"
-                })
             })
+        }
+    }
+
+    reposition() {
+        this.properties.header.computeHeight()
+
+        this.properties.rows.forEach(v => v.element.style.top = this.getOffset(v.rank))
+    }
+
+    done() {
+        this.parent.appendChild(this.element)
+
+        this.reposition()
+
+        this.element.appendChild(this.clone.childNodes[0])
+
+        this.parent.removeChild(this.clone)
+    }
+
+    swap() {
+        this.element = [this.clone, this.clone = this.element][0]
     }
 
     get height() {
