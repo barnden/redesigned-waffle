@@ -62,7 +62,7 @@ class TableCell {
         if (!(this.element instanceof HTMLElement))
             throw "[TableCell] Attempted to set content before setup()."
 
-        this.element.innerHTML = data
+        this.element.innerHTML = DOMPurify.sanitize(data)
         this._data = data
 
         const row = this.parent
@@ -174,13 +174,13 @@ class TableRow {
         const rowHeight = this.parent.properties.rowHeight
 
         drag.addHook("dragstart", _ => {
-            Utils.setStyles(
-                [this.element, {
-                    transition: null,
-                    zIndex: 1
-                }],
-                [this.parent.element, { userSelect: "none" }]
-            )
+        Utils.setStyles(
+            [this.element, {
+                transition: null,
+                zIndex: 1
+            }],
+            [this.parent.element, { userSelect: "none" }]
+        )
         })
 
         drag.addHook("dragend", _ => {
@@ -201,15 +201,15 @@ class TableRow {
 
         drag.addHook("dragpostmove", data => {
             const top = data[2] + rowHeight / 2
-            const currentRank = this.parent.getRank(top)
+        const currentRank = this.parent.getRank(top)
 
-            if (this.rank == currentRank)
-                return false
+        if (this.rank == currentRank)
+            return false
 
             this.parent.shift(currentRank)
-            this.rank = currentRank
+        this.rank = currentRank
 
-            return false
+        return false
         })
 
         this.drag = drag
@@ -373,7 +373,7 @@ class Table {
 
                 Utils.setStyle(v.element, {
                     top: this.getOffset(v.rank) + "px",
-                    transition: "top 100ms"
+                transition: "top 100ms"
                 })
             })
     }

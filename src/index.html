@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>redesigned-waffle</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <link id="main-stylesheet" rel="stylesheet" href="assets/style.css">
 </head>
 
 <body>
@@ -21,6 +21,10 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.0/purify.min.js"
+        integrity="sha512-FJzrdtFBVzaaehq9mzbhljqwJ7+jE0GyTa8UBxZdMsMUjflR25f5lJSGD0lmQPHnhQfnctG0B1TNQsObwyJUzA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <script>
         'use strict'
         const _DEBUG = 1
@@ -28,13 +32,15 @@
         const columns = ["A", "B", "C", "D", "E"]
         const table = new Table(document.getElementById("table"))
             .addColumn("An unnecessarily verbose, and extremely long title for a column to test CSS styling and row offsets.", true, "center", 2)
-            .addColumn("B", true, "left", 1)
-            .addColumn("C", true, "right", 1)
-            .addColumn("D", true, "left", 2)
-            .addColumn("E", true, "left", 1)
+            .addColumn("B", true, "center", 1)
+            .addColumn("C", true, "center", 1)
+            .addColumn("D", true, "center", 2)
+            .addColumn("E", true, "center", 1)
 
-        for (let i = 1; i <= 5; i++)
-            table.addRow(...columns.map(v => i + v))
+        for (let i = 1; i <= 500; i++)
+            table.addRow(...columns.map(v => i))
+
+        table.done()
     </script>
 </body>
 
