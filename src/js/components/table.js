@@ -146,6 +146,7 @@ class TableRow {
         this.element.classList.add("row")
 
         this.parent.element.appendChild(this.element)
+        this.parent.intersectionObserver.observe(this.element)
 
         if (this.drag)
             this.setupDrag()
@@ -173,13 +174,12 @@ class TableRow {
     }
 
     dragstart() {
-        Utils.setStyles(
-            [this.element, {
-                transition: null,
-                zIndex: 1
-            }],
-            [this.parent.element, { userSelect: "none" }]
-        )
+        Utils.setStyle(this.element, {
+            transition: null,
+            zIndex: 1
+        })
+
+        this.parent.properties.dragged = this
     }
 
     postmove(data) {
@@ -208,11 +208,17 @@ class TableRow {
             transition: "top 100ms"
         })
 
+        this.parent.properties.dragged = null
+
         return false
     }
 
     get y() {
         return parseInt(this.element.style.top) || 0
+    }
+
+    set y(v) {
+        this.element.style.top = v + "px"
     }
 
     get x() {
@@ -271,9 +277,12 @@ class Table {
 
         this.parent = parent
         this.properties = {
-            header: null,
-            rows: [],
-            rowHeight: 0,
+            header: null,       // TableHeader
+            dragged: null,      // TableRow
+            rows: [],           // [TableRow]
+            data: [],           // [TableData]
+            rowHeight: 0,       // number, height of TableRow in pixels
+            topRow: 0,          // number, the rank of the top most TableRow
             get headerHeight() { return this.header.height }
         }
 
@@ -322,6 +331,7 @@ class Table {
             console.debug(`[Table] Computed line height is ${this.properties.rowHeight}px.`)
 
         this.resizeObserver = new ResizeObserver(_ => this.reposition())
+        this.intersectionObserver = new IntersectionObserver(([e]) => this.intersect(e), { threshold: [0, 0.5] })
         this.resizeObserver.observe(this.element)
     }
 
@@ -402,6 +412,22 @@ class Table {
                 transition: "top 100ms"
             })
         }
+    }
+
+    intersect(entity) {
+        if (typeof (entity) === "undefined")
+            return
+
+        const prev = this.properties.topRow
+        const rank = parseInt(entity.target.getAttribute("data-rank")) || 0
+
+        if (!entity.isIntersecting && entity.boundingClientRect.top < 0)
+            this.properties.topRow = rank
+
+        this.properties.topRow = Math.min(this.properties.topRow, rank)
+
+        if (this.properties.topRow != prev && this.properties.dragged)
+            this.properties.dragged.y += (rank - prev) * this.properties.rowHeight
     }
 
     reposition() {
